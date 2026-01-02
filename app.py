@@ -5,19 +5,15 @@ from xml.etree import ElementTree as ET
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-# optional
 try:
     import tweepy
 except:
     tweepy = None
 
-
 st.set_page_config(page_title="Social Media Big Data Analyzer", page_icon="🌐", layout="wide")
 st.title("🌐 Social Media Big Data Analyzer")
 st.caption("Choose a platform → enter topic → generate a word cloud (500–5000 words).")
 
-
-# ------------------ helper ------------------
 def make_wordcloud(text_list, max_words):
     text = " ".join(text_list)
     wc = WordCloud(width=1200, height=600, max_words=max_words, background_color="white").generate(text)
@@ -26,15 +22,10 @@ def make_wordcloud(text_list, max_words):
     plt.axis("off")
     return fig
 
-
-# ------------------ tabs ------------------
 tab_fb, tab_tw, tab_rd = st.tabs(["📘 Facebook", "🐦 Twitter / X", "👽 Reddit"])
 
-
-# ====== REDDIT (NO API, NO FEEDPARSER) ======
 with tab_rd:
     st.subheader("👽 Reddit Analyzer")
-
     topic = st.text_input("Enter a topic for Reddit:", "election", key="reddit_topic")
     limit_words = st.slider("Words to use in word cloud:", 500, 5000, 1200, key="reddit_slider")
 
@@ -56,8 +47,6 @@ with tab_rd:
             fig = make_wordcloud(df["Post Title"].tolist(), limit_words)
             st.pyplot(fig)
 
-
-# ====== TWITTER / X (API KEY REQUIRED) ======
 with tab_tw:
     st.subheader("🐦 Twitter / X Analyzer")
     st.info("Add TWITTER_BEARER token in Streamlit → Settings → Secrets.")
@@ -86,8 +75,6 @@ with tab_tw:
                     fig = make_wordcloud(df["Tweet"].tolist(), limit_words)
                     st.pyplot(fig)
 
-
-# ====== FACEBOOK (API KEY REQUIRED) ======
 with tab_fb:
     st.subheader("📘 Facebook Analyzer")
     st.info("Add FB_TOKEN in Streamlit → Settings → Secrets.")
