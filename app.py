@@ -50,4 +50,21 @@ with tab_rd:
     max_words = st.slider("Words to include in Word Cloud", 500, 5000, 1200, key="rd_words")
 
     if st.button("Analyze Reddit"):
+        url = f"https://www.reddit.com/search.rss?q={topic}&sort=hot"
+        headers = {"User-Agent": "ProjectApp/1.0"}
+        res = requests.get(url, headers=headers)
 
+        if res.status_code != 200:
+            st.error("Could not fetch Reddit results.")
+        else:
+            root = ET.fromstring(res.text)
+            titles = [i.find("title").text for i in root.findall(".//item")]
+            df = pd.DataFrame(titles, columns=["Post Title"])
+
+            st.write("Posts collected:", len(df))
+            st.dataframe(df)
+
+            if len(df) == 0:
+                st.warning("No posts found. Try another topic.")
+            else:
+                make_wordcloud(df["Post Title"].tolist(), max_words)
