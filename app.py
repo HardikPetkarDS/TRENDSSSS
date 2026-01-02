@@ -51,30 +51,22 @@ with tab_rd:
     topic = st.text_input("Enter a topic for Reddit:", "election", key="rd_topic")
     max_words = st.slider("Words to include in Word Cloud:", 500, 5000, 1200, key="rd_words")
 
-    # large subreddits to guarantee results
-    subreddits = ["news", "worldnews", "politics", "technology", "AskReddit"]
-
     if st.button("Analyze Reddit"):
-        all_titles = []
+        url = f"https://www.reddit.com/search.json?q={topic}&limit=100"
+        headers = {"User-Agent": "ProjectApp/1.0"}
+        res = requests.get(url, headers=headers).json()
 
-        for sub in subreddits:
-            url = f"https://www.reddit.com/r/{sub}/search.rss?q={topic}&restrict_sr=1&sort=hot"
-            headers = {"User-Agent": "ProjectApp/1.0"}
-            res = requests.get(url, headers=headers)
+        titles = [p["data"]["title"] for p in res["data"]["children"]]
 
-            if res.status_code == 200:
-                root = ET.fromstring(res.text)
-                titles = [i.find("title").text for i in root.findall(".//item")]
-                all_titles.extend(titles)
-
-        df = pd.DataFrame(all_titles, columns=["Post Title"])
+        df = pd.DataFrame(titles, columns=["Post Title"])
         st.write("Posts collected:", len(df))
         st.dataframe(df)
 
         if len(df) == 0:
-            st.warning("No posts found. Try a different keyword.")
+            st.warning("No posts found. Try another topic.")
         else:
             make_wordcloud(df["Post Title"].tolist(), max_words)
+
 
 
 # ============================= TWITTER / X =============================
