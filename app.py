@@ -49,22 +49,28 @@ with tab_rd:
     topic = st.text_input("Enter a topic for Reddit", "election", key="rd_topic")
     max_words = st.slider("Words to include in Word Cloud", 500, 5000, 1200, key="rd_words")
 
+    subreddits = ["news", "worldnews", "politics", "technology", "AskReddit"]
+
     if st.button("Analyze Reddit"):
-        url = f"https://www.reddit.com/search.rss?q={topic}&sort=hot"
-        headers = {"User-Agent": "ProjectApp/1.0"}
-        res = requests.get(url, headers=headers)
+        all_titles = []
 
-        if res.status_code != 200:
-            st.error("Could not fetch Reddit results.")
+        for sub in subreddits:
+            url = f"https://www.reddit.com/r/{sub}/search.rss?q={topic}&restrict_sr=1&sort=hot"
+            headers = {"User-Agent": "ProjectApp/1.0"}
+            res = requests.get(url, headers=headers)
+
+            if res.status_code == 200:
+                root = ET.fromstring(res.text)
+                titles = [i.find('title').text for i in root.findall('.//item')]
+                all_titles.extend(titles)
+
+        df = pd.DataFrame(all_titles, columns=["Post Title"])
+
+        st.write("Posts collected:", len(df))
+        st.dataframe(df)
+
+        if len(df) == 0:
+            st.warning("No posts found. Try a different keyword.")
         else:
-            root = ET.fromstring(res.text)
-            titles = [i.find("title").text for i in root.findall(".//item")]
-            df = pd.DataFrame(titles, columns=["Post Title"])
+            make_wordcloud(df["Post Title"].tolist(), max_words)
 
-            st.write("Posts collected:", len(df))
-            st.dataframe(df)
-
-            if len(df) == 0:
-                st.warning("No posts found. Try another topic.")
-            else:
-                make_wordcloud(df["Post Title"].tolist(), max_words)
